@@ -1,14 +1,19 @@
 package core.basesyntax;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 public class SalaryInfo {
     public static final int DATE_COLUMN_INDEX = 0;
     public static final int NAME_COLUMN_INDEX = 1;
     public static final int HOUR_COLUMN_INDEX = 2;
     public static final int PRICE_COLUMN_INDEX = 3;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
+            .ofPattern("dd.MM.yyyy");
 
     public String getSalaryInfo(String[] names, String[] data, String dateFrom, String dateTo) {
-        int dateFromSize = dateSize(dateFrom);
-        int dateToSize = dateSize(dateTo);
+        LocalDate fromDate = LocalDate.parse(dateFrom, DATE_FORMATTER);
+        LocalDate toDate = LocalDate.parse(dateTo, DATE_FORMATTER);
 
         StringBuilder reportStringBuilder = new StringBuilder();
         reportStringBuilder
@@ -21,36 +26,28 @@ public class SalaryInfo {
 
             for (String salaryInfoColumn : data) {
                 String[] splitInfo = salaryInfoColumn.split(" ");
-                String salaryDate = splitInfo[DATE_COLUMN_INDEX];
-                int salaryDateSize = dateSize(salaryDate);
+                LocalDate actualDate = LocalDate.parse(splitInfo[DATE_COLUMN_INDEX],
+                        DATE_FORMATTER);
 
-                if (!name.equals(splitInfo[NAME_COLUMN_INDEX])
-                        || dateFromSize >= salaryDateSize || dateToSize < salaryDateSize) {
+                if (!name.equals(splitInfo[NAME_COLUMN_INDEX])) {
                     continue;
                 }
 
-                int salaryHour = Integer.valueOf(splitInfo[HOUR_COLUMN_INDEX]);
-                int salaryPrice = Integer.valueOf(splitInfo[PRICE_COLUMN_INDEX]);
+                if (actualDate.isBefore(fromDate) || actualDate.isAfter(toDate)) {
+                    continue;
+                }
 
+                int salaryHour = Integer.parseInt(splitInfo[HOUR_COLUMN_INDEX]);
+                int salaryPrice = Integer.parseInt(splitInfo[PRICE_COLUMN_INDEX]);
                 personalSalary += salaryHour * salaryPrice;
             }
 
             reportStringBuilder
-                    .append("\n")
+                    .append(System.lineSeparator())
                     .append(name)
                     .append(" - ")
                     .append(personalSalary);
         }
         return reportStringBuilder.toString();
     }
-
-    public int dateSize(String dataString) {
-        String[] splitDateArray = dataString.split("\\.");
-        StringBuilder dateBuilder = new StringBuilder();
-        for (String splitDate : splitDateArray) {
-            dateBuilder.insert(0, splitDate);
-        }
-        return Integer.valueOf(dateBuilder.toString());
-    }
-
 }
